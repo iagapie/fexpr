@@ -60,6 +60,11 @@ func main() {
 - **`||`** OR join operator (eg. `a=b || c=d`)
 - **`()`** Parenthesis (eg. `(a=1 && b=2) || (a=3 && b=4)`)
 
+#### List
+List tokens are any comma separated values enclosed in square brackets `[]`.
+
+_Example_: `[1, 2, 3]`, `["a", "b", "c"]`, `[1, 2, 3, "a", "b", "c"]`.
+
 #### Numbers
 Number tokens are any integer or decimal numbers.
 

@@ -2,6 +2,7 @@ package fexpr
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 	"unicode/utf8"
@@ -57,7 +58,8 @@ const (
 	TokenIdentifier TokenType = "identifier" // variable, column name, placeholder, etc.
 	TokenFunction   TokenType = "function"   // function
 	TokenNumber     TokenType = "number"
-	TokenText       TokenType = "text"  // ' or " quoted string
+	TokenText       TokenType = "text" // ' or " quoted string
+	TokenList       TokenType = "list"
 	TokenGroup      TokenType = "group" // groupped/nested tokens
 	TokenComment    TokenType = "comment"
 )
@@ -115,6 +117,11 @@ func (s *Scanner) Scan() (Token, error) {
 	if isTextStartRune(ch) {
 		s.unread()
 		return s.scanText(false)
+	}
+
+	if isListStartRune(ch) {
+		s.unread()
+		return s.scanList()
 	}
 
 	if isSignStartRune(ch) {
@@ -251,6 +258,74 @@ func (s *Scanner) scanText(preserveQuotes bool) (Token, error) {
 	}
 
 	return Token{Type: TokenText, Literal: literal}, err
+}
+
+// scanList consumes all runes within a list and returns a list token
+func (s *Scanner) scanList() (Token, error) {
+	var (
+		buf  bytes.Buffer
+		args []Token
+		err  error
+		t    Token
+	)
+
+	// read the first list bracket without writing it to the buffer
+	firstChar := s.read()
+	openList := 1
+
+	// Read every subsequent text rune into the buffer.
+	// EOF and matching closing bracket will cause the loop to exit.
+	for {
+		ch := s.read()
+
+		if ch == eof {
+			break
+		}
+
+		if ch == ',' {
+			buf.WriteRune(ch)
+
+			nextCh := s.read()
+			s.unread()
+			if nextCh == eof || nextCh == ',' {
+				args = append(args, Token{Type: TokenText, Literal: ""})
+			}
+		} else if isTextStartRune(ch) {
+			s.unread()
+
+			t, err = s.scanText(true)
+			buf.WriteString(t.Literal)
+
+			if err != nil {
+				break
+			}
+
+			t, err = NewScanner([]byte(t.Literal)).scanText(false)
+			if err != nil {
+				break
+			}
+			args = append(args, t)
+		} else if isDigitRune(ch) {
+			s.unread()
+
+			t, err = s.scanNumber()
+			buf.WriteString(t.Literal)
+
+			if err != nil {
+				break
+			}
+			args = append(args, t)
+		} else if ch == ']' {
+			openList--
+			break
+		}
+	}
+
+	if err == nil && (!isListStartRune(firstChar) || openList > 0) {
+		err = errors.New("invalid formatted list - missing the closing square bracket")
+	}
+
+	return Token{Type: TokenList, Literal: buf.String(), Meta: args}, err
 }
 
 // scanComment consumes all contiguous single line comment runes until
@@ -587,6 +662,11 @@ func isTextStartRune(ch rune) bool {
 // isNumberStartRune checks if a rune is a valid number start character (aka. digit).
 func isNumberStartRune(ch rune) bool {
 	return ch == '-' || isDigitRune(ch)
+}
+
+// isListStartRune checks if a rune is a valid list start character.
+func isListStartRune(ch rune) bool {
+	return ch == '['
 }
 
 // isSignStartRune checks if a rune is a valid sign operator start character.

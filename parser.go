@@ -81,8 +81,8 @@ func Parse(text string) ([]ExprGroup, error) {
 
 		switch step {
 		case stepBeforeSign:
-			if t.Type != TokenIdentifier && t.Type != TokenText && t.Type != TokenNumber && t.Type != TokenFunction {
-				return nil, fmt.Errorf("expected left operand (identifier, function, text or number), got %q (%s)", t.Literal, t.Type)
+			if t.Type != TokenIdentifier && t.Type != TokenText && t.Type != TokenNumber && t.Type != TokenList && t.Type != TokenFunction {
+				return nil, fmt.Errorf("expected left operand (identifier, function, list, text or number), got %q (%s)", t.Literal, t.Type)
 			}
 
 			expr = Expr{Left: t}
@@ -96,8 +96,8 @@ func Parse(text string) ([]ExprGroup, error) {
 			expr.Op = SignOp(t.Literal)
 			step = stepAfterSign
 		case stepAfterSign:
-			if t.Type != TokenIdentifier && t.Type != TokenText && t.Type != TokenNumber && t.Type != TokenFunction {
-				return nil, fmt.Errorf("expected right operand (identifier, function text or number), got %q (%s)", t.Literal, t.Type)
+			if t.Type != TokenIdentifier && t.Type != TokenText && t.Type != TokenNumber && t.Type != TokenList && t.Type != TokenFunction {
+				return nil, fmt.Errorf("expected right operand (identifier, function, list, text or number), got %q (%s)", t.Literal, t.Type)
 			}
 
 			expr.Right = t

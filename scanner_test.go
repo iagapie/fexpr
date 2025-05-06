@@ -135,6 +135,9 @@ func TestScannerScan(t *testing.T) {
 		{`("ab)("c)`, []output{{false, `{<nil> group "ab)("c}`}}},
 		{`("ab)(c)`, []output{{true, `{<nil> group "ab)(c)}`}}},
 		{`( func(1, 2, 3, func(4)) a b c )`, []output{{false, `{<nil> group  func(1, 2, 3, func(4)) a b c }`}}},
+		{"test =[1,2, 3]", []output{{false, "{<nil> identifier test}"}, {false, "{<nil> whitespace  }"}, {false, "{<nil> sign =}"}, {false, "{[{<nil> number 1} {<nil> number 2} {<nil> number 3}] list 1,2,3}"}}},
+		{`test =["a", "b","c"]`, []output{{false, "{<nil> identifier test}"}, {false, "{<nil> whitespace  }"}, {false, "{<nil> sign =}"}, {false, `{[{<nil> text a} {<nil> text b} {<nil> text c}] list "a","b","c"}`}}},
+		{`test =["a", 2,"c"]`, []output{{false, "{<nil> identifier test}"}, {false, "{<nil> whitespace  }"}, {false, "{<nil> sign =}"}, {false, `{[{<nil> text a} {<nil> number 2} {<nil> text c}] list "a",2,"c"}`}}},
 	}
 
 	for _, scenario := range testScenarios {
