@@ -325,6 +325,10 @@ func (s *Scanner) scanList() (Token, error) {
 		err = errors.New("invalid formatted list - missing the closing square bracket")
 	}
 
+	if err == nil && len(args) == 0 {
+		err = errors.New("empty list")
+	}
+
 	return Token{Type: TokenList, Literal: buf.String(), Meta: args}, err
 }
 

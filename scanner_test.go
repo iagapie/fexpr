@@ -138,6 +138,7 @@ func TestScannerScan(t *testing.T) {
 		{"test =[1,2, 3]", []output{{false, "{<nil> identifier test}"}, {false, "{<nil> whitespace  }"}, {false, "{<nil> sign =}"}, {false, "{[{<nil> number 1} {<nil> number 2} {<nil> number 3}] list 1,2,3}"}}},
 		{`test =["a", "b","c"]`, []output{{false, "{<nil> identifier test}"}, {false, "{<nil> whitespace  }"}, {false, "{<nil> sign =}"}, {false, `{[{<nil> text a} {<nil> text b} {<nil> text c}] list "a","b","c"}`}}},
 		{`test =["a", 2,"c"]`, []output{{false, "{<nil> identifier test}"}, {false, "{<nil> whitespace  }"}, {false, "{<nil> sign =}"}, {false, `{[{<nil> text a} {<nil> number 2} {<nil> text c}] list "a",2,"c"}`}}},
+		{`test=[]`, []output{{false, `{<nil> identifier test}`}, {false, "{<nil> sign =}"}, {true, "{[] list }"}}},
 	}
 
 	for _, scenario := range testScenarios {
