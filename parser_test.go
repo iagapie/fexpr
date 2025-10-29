@@ -140,3 +140,36 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
+
+func TestList(t *testing.T) {
+	scenarios := []struct {
+		input         string
+		expectedError bool
+		expectedPrint string
+		options       []Option
+	}{
+		{`demo=["te\"st","b"]`, false, `[{{{<nil> identifier demo} = {[{<nil> text te"st} {<nil> text b}] list "te\"st","b"}} &&}]`, []Option{WithEmptyList(true)}},
+		{`demo=[]`, false, `[{{{<nil> identifier demo} = {[] list }} &&}]`, []Option{WithEmptyList(true)}},
+		{`demo=[]`, true, `[]`, []Option{WithEmptyList(false)}},
+	}
+
+	for i, scenario := range scenarios {
+		t.Run(fmt.Sprintf("s%d:%s", i, scenario.input), func(t *testing.T) {
+			v, err := Parse(scenario.input, scenario.options...)
+
+			if scenario.expectedError && err == nil {
+				t.Fatalf("Expected error, got nil (%q)", scenario.input)
+			}
+
+			if !scenario.expectedError && err != nil {
+				t.Fatalf("Did not expect error, got %q (%q).", err, scenario.input)
+			}
+
+			vPrint := fmt.Sprintf("%v", v)
+
+			if vPrint != scenario.expectedPrint {
+				t.Fatalf("Expected %s, got %s", scenario.expectedPrint, vPrint)
+			}
+		})
+	}
+}

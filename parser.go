@@ -38,11 +38,29 @@ const (
 	StepJoin
 )
 
+type config struct {
+	emptyList bool
+}
+
+type Option func(*config)
+
+// WithEmptyList disable return error for empty list
+func WithEmptyList(emptyList bool) Option {
+	return func(c *config) {
+		c.emptyList = emptyList
+	}
+}
+
 // Parse parses the provided text and returns its processed AST
 // in the form of `ExprGroup` slice(s).
 //
 // Comments and whitespaces are ignored.
-func Parse(text string) ([]ExprGroup, error) {
+func Parse(text string, opts ...Option) ([]ExprGroup, error) {
+	var cfg config
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	result := []ExprGroup{}
 	scanner := NewScanner([]byte(text))
 	step := stepBeforeSign
@@ -53,7 +71,9 @@ func Parse(text string) ([]ExprGroup, error) {
 	for {
 		t, err := scanner.Scan()
 		if err != nil {
-			return nil, err
+			if !cfg.emptyList || !errors.Is(err, ErrEmptyList) {
+				return nil, err
+			}
 		}
 
 		if t.Type == TokenEOF {
@@ -65,7 +85,7 @@ func Parse(text string) ([]ExprGroup, error) {
 		}
 
 		if t.Type == TokenGroup {
-			groupResult, err := Parse(t.Literal)
+			groupResult, err := Parse(t.Literal, opts...)
 			if err != nil {
 				return nil, err
 			}
