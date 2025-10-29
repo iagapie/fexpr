@@ -64,6 +64,8 @@ const (
 	TokenComment    TokenType = "comment"
 )
 
+var ErrEmptyList = errors.New("empty list")
+
 // Token represents a single scanned literal (one or more combined runes).
 type Token struct {
 	Meta    interface{}
@@ -326,7 +328,7 @@ func (s *Scanner) scanList() (Token, error) {
 	}
 
 	if err == nil && len(args) == 0 {
-		err = errors.New("empty list")
+		err = ErrEmptyList
 	}
 
 	return Token{Type: TokenList, Literal: buf.String(), Meta: args}, err
