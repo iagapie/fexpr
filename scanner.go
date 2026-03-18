@@ -612,6 +612,14 @@ func (s *Scanner) scanFunctionArgs(funcName string, funcDepth int) (Token, error
 			}
 			args = append(args, t)
 			expectComma = true
+		} else if isListStartRune(ch) {
+			s.unread()
+			t, err := s.scanList()
+			if err != nil {
+				return Token{Type: TokenFunction, Literal: funcName, Meta: args}, fmt.Errorf("invalid list argument %q in function %q: %w", t.Literal, funcName, err)
+			}
+			args = append(args, t)
+			expectComma = true
 		} else {
 			return Token{Type: TokenFunction, Literal: funcName, Meta: args}, fmt.Errorf("unsupported argument character %q in function %q", ch, funcName)
 		}
